@@ -177,7 +177,7 @@ def for_batch_import(referrals, start, end, countlist):
 def parens(users, refs, start, end):
     '''
     try to generate using a different example from the fundamentals page
-    can see something on the browser but can't view the data wtf.
+
     '''
 
     rowlist = []
@@ -191,7 +191,7 @@ def parens(users, refs, start, end):
     for i in range(11, 100):
         rowlist.append(rel(start[i], "RECOMMENDED", end[i]))
 
-    incubate = graph_db.create(*rowlist) #supposedly the start expands the list & might work better?
+    incubate = graph_db.create(*rowlist) #asterisk expands the list & might work better?
 
     #gives an error Incomplete Read if you try to do the whole thing at once, but
     #looks like you can do this in pieces in order to get the whole thing (?)
