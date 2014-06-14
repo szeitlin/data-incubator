@@ -19,12 +19,35 @@ def define_cols(referrals):
 
     usercol = referrals['user_code']
     refcol = referrals['referrer_code']
-
-    #str/NaN series --> add new bool column to referrals dataframe
-
     referrals['has_ref'] = refcol.notnull()
+    rels = referrals['has_ref']
 
-    return usercol, refcol
+    return usercol, refcol, rels
+
+def change_flag_and_count(usercol, rels):
+    '''
+    identify users and refs that are paired
+    '''
+    i = 1
+    counter = 0             #i=1 to skip first row
+
+    countlist = []
+
+    for i in range(len(usercol)):
+        if rels.ix[i]==True:
+            rels.ix[i] = "REFERRED"
+            counter +=1
+            countlist.append(counter)
+
+        else:
+            rels.ix[i] = ""
+            counter = 0
+            countlist.append(counter)
+            continue
+
+    referrals['counter'] = countlist
+
+    return rels, countlist
 
 def primaries(usercol, refcol, referrals):
     '''
@@ -69,7 +92,7 @@ def find_arrows(users, refs):
     return users, refs, start, end
 
 
-def create_db(users, refs, start, end):
+def create_db(usercol, refcol, start, end):
     '''
     try to generate relationships using a different example from the fundamentals page
 
@@ -81,8 +104,8 @@ def create_db(users, refs, start, end):
 
     #nodes first
     for i in range(11, 100):
-        rowlist.append (node(user=users[i]))
-        rowlist.append (node(ref = refs[i]))
+        rowlist.append (node(user=usercol[i]))
+        rowlist.append (node(ref = refcol[i]))
 
     #relationships second
     for i in range(11, 100):
@@ -101,7 +124,7 @@ def main():
 
     referrals = pandas.read_csv("user_codes.txt")
 
-    usercol, refcol = define_cols(referrals)
+    usercol, refcol, rels = define_cols(referrals)
     users, refs = primaries(usercol, refcol, referrals)
     users, refs, start, end = find_arrows(users, refs)
     create_db(users, refs, start, end)
