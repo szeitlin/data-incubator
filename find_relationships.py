@@ -24,6 +24,27 @@ def define_cols(referrals):
 
     return usercol, refcol, rels
 
+def batch_insert_nodes(usercol):
+    '''
+    this approach creates nodes for both users and referrers, but doesn't create relationships
+    '''
+    graph_db = neo4j.GraphDatabaseService("http://localhost:7474/db/data")
+    batch = neo4j.WriteBatch(graph_db)
+
+    #have to use enumerate to get the index
+    for i, user in enumerate(usercol):
+        batch.get_or_create_indexed_node("Users", "index", i {
+            "index":i, "name": user)
+        })
+
+    for i, ref in enumerate(refcol):
+        batch.get_or_create_indexed_node("Referrers", "index", i {
+            "index": i, "name": ref)
+        })
+
+    nodes = batch.submit()
+
+
 def change_flag_and_count(usercol, rels):
     '''
     identify users and refs that are paired
@@ -31,7 +52,7 @@ def change_flag_and_count(usercol, rels):
     i = 1
     counter = 0             #i=1 to skip first row
 
-    countlist = []
+    countlist, start, end = [], [], []
 
     for i in range(len(usercol)):
         if rels.ix[i]==True:
@@ -48,48 +69,6 @@ def change_flag_and_count(usercol, rels):
     referrals['counter'] = countlist
 
     return rels, countlist
-
-def primaries(usercol, refcol, referrals):
-    '''
-    identify users and refs that are paired
-    '''
-    i, counter = 1, 0             #i=1 to skip first row
-    users, refs = [], []
-
-    for i in range(len(usercol)):
-        if referrals['has_ref'].ix[i] == True:
-            counter +=1
-            users.append(usercol[i])
-            refs.append(refcol[i])
-        else:
-            counter = 0
-            continue
-
-    return users, refs
-
-
-def find_arrows(users, refs):
-    '''
-    starting just from the primary nodes, identify numbering for start and end
-    NOTE: this is just a placeholder that ignores further branching for now
-    '''
-    start, end= [], []
-    i = 0
-
-    #convert to series to use index
-    users = pandas.Series(users)
-    refs = pandas.Series(refs)
-
-    for i in range(len(users)):
-        start.append(i)
-
-    for i in range(len(refs)):
-        end.append(i)
-
-    #adjust endpoints
-    end = [(x+2) for x in end] #and this isn't even working the way I want it to?
-
-    return users, refs, start, end
 
 
 def create_db(usercol, refcol, start, end):
